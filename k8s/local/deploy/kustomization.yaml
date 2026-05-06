@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../deploy/namespace.yaml
+  - postgres-deployment.yaml
+  - postgres-service.yaml
+  - postgres-init-job.yaml
+  - ../../../deploy/rest-server/config.yaml
+  - ../../../deploy/rest-server/deployment.yaml
+  - ../../../deploy/rest-server/service.yaml
+  - ../../../deploy/grpc-server/config.yaml
+  - ../../../deploy/grpc-server/deployment.yaml
+  - ../../../deploy/grpc-server/service.yaml
+  - ../../../deploy/graphql-server/config.yaml
+  - ../../../deploy/graphql-server/deployment.yaml
+  - ../../../deploy/graphql-server/service.yaml
+
+patchesStrategicMerge:
+  - rest-config-local.yaml
+  - grpc-config-local.yaml
+  - graphql-config-local.yaml
+  - rest-deployment-local.yaml
+  - grpc-deployment-local.yaml
+  - graphql-deployment-local.yaml
