@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"myapp/config"
+	"myapp/telemetry"
 	"net/http"
 
 	mon "github.com/antonputra/go-utils/monitoring"
@@ -28,14 +29,15 @@ func main() {
 	}
 
 	reg := prometheus.NewRegistry()
+	telemetry.Register(reg)
 	mon.StartPrometheusServer(cfg.MetricsPort, reg)
 
 	s := newServer(ctx, cfg, reg)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /api/devices", s.getDevices)
-	mux.HandleFunc("POST /api/devices", s.saveDevice)
+	mux.Handle("GET /api/devices", telemetry.HTTPHandler("rest", "get_devices", http.HandlerFunc(s.getDevices)))
+	mux.Handle("POST /api/devices", telemetry.HTTPHandler("rest", "post_devices", http.HandlerFunc(s.saveDevice)))
 	mux.HandleFunc("GET /healthz", s.getHealth)
 
 	appPort := fmt.Sprintf(":%d", cfg.AppPort)

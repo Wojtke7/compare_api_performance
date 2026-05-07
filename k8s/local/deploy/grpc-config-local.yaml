@@ -14,4 +14,4 @@ data:
       password: devops123
       host: postgres.benchmark.svc.cluster.local
       database: mydb
-      maxConnections: 500
+      maxConnections: 50

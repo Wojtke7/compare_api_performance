@@ -9,6 +9,7 @@ import (
 	"myapp/config"
 	"myapp/db"
 	"myapp/device"
+	"myapp/telemetry"
 	"net"
 	"time"
 
@@ -35,6 +36,7 @@ func main() {
 	}
 
 	reg := prometheus.NewRegistry()
+	telemetry.Register(reg)
 	mon.StartPrometheusServer(cfg.MetricsPort, reg)
 
 	appPort := fmt.Sprintf(":%d", cfg.AppPort)
@@ -43,7 +45,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(telemetry.UnaryServerInterceptor("grpc")))
 	ns := newServer(ctx, cfg, reg)
 
 	device.RegisterCloudServer(s, ns)

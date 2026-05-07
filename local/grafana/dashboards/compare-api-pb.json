@@ -1,0 +1,138 @@
+{
+  "uid": "compare-api-pb",
+  "title": "Compare API — PB1 / PB2 / PB3",
+  "tags": ["compare-api", "prometheus"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "PB1 — opóźnienie (percentyle, s)",
+      "description": "Histogram `compare_api_request_duration_seconds` — p50 / p95 / p99 wg etykiety `service`.",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by (le, service) (rate(compare_api_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "{{service}} p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le, service) (rate(compare_api_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "{{service}} p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le, service) (rate(compare_api_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "{{service}} p99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "PB2 — przepustowość (req/s)",
+      "description": "Suma `rate(compare_api_requests_total)` — żądania na sekundę per `service`.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service) (rate(compare_api_requests_total[$__rate_interval]))",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "PB2 — szczytowa przepustowość (łącznie, req/s)",
+      "description": "Maksimum z 15 min okna próbkowanego co 1 min (łączny ruch).",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max_over_time((sum(rate(compare_api_requests_total[1m])))[15m:1m])"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto" }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "PB3 — RAM procesu (RSS)",
+      "description": "`process_resident_memory_bytes` z kolektora procesu Go.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_resident_memory_bytes",
+          "legendFormat": "{{service}} / {{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "PB3 — CPU procesu (rdzenie)",
+      "description": "`rate(process_cpu_seconds_total)` — średnie zużycie CPU w rdzeniach.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service, job) (rate(process_cpu_seconds_total[$__rate_interval]))",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } }
+    }
+  ]
+}

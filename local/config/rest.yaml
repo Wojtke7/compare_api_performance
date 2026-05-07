@@ -1,10 +1,10 @@
 ---
-debug: true
+debug: false
 appPort: 8080
 metricsPort: 8081
 database:
   user: rest_app
   password: devops123
-  host: postgres.antonputra.pvt
+  host: postgres
   database: mydb
   maxConnections: 50

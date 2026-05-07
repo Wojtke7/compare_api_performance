@@ -15,4 +15,4 @@ data:
       password: devops123
       host: postgres.antonputra.pvt
       database: mydb
-      maxConnections: 500
+      maxConnections: 50

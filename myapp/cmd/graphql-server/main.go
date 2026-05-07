@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"myapp/config"
 	"myapp/graph"
+	"myapp/telemetry"
 	"net/http"
 
 	"myapp/db"
@@ -39,6 +40,7 @@ func main() {
 	}
 
 	reg := prometheus.NewRegistry()
+	telemetry.Register(reg)
 	mon.StartPrometheusServer(cfg.MetricsPort, reg)
 
 	r := newServer(ctx, cfg, reg)
@@ -57,7 +59,7 @@ func main() {
 	})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	http.Handle("/query", telemetry.HTTPHandler("graphql", "graphql_query", srv))
 
 	appPort := fmt.Sprintf(":%d", cfg.AppPort)
 	log.Fatal(http.ListenAndServe(appPort, nil))
