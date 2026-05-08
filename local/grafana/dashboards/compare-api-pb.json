@@ -68,32 +68,94 @@
     },
     {
       "id": 3,
-      "type": "stat",
-      "title": "PB2 — szczytowa przepustowość (łącznie, req/s)",
-      "description": "Maksimum z 15 min okna próbkowanego co 1 min (łączny ruch).",
+      "type": "timeseries",
+      "title": "PB2 — współczynnik błędów (%) per serwis",
+      "description": "Odsetek błędów: `error / all * 100` dla każdego `service`.",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
           "refId": "A",
-          "expr": "max_over_time((sum(rate(compare_api_requests_total[1m])))[15m:1m])"
+          "expr": "100 * sum by (service) (rate(compare_api_requests_total{status=\"error\"}[$__rate_interval])) / clamp_min(sum by (service) (rate(compare_api_requests_total[$__rate_interval])), 1e-9)",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": { "drawStyle": "line", "fillOpacity": 10 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "PB2 — success vs error (req/s) per serwis",
+      "description": "Panel korelacyjny: gdy `error req/s` rośnie przy dalszym wzroście ruchu, osiągasz granicę utrzymywalnej przepustowości.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service) (rate(compare_api_requests_total{status=\"success\"}[$__rate_interval]))",
+          "legendFormat": "{{service}} success"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (service) (rate(compare_api_requests_total{status=\"error\"}[$__rate_interval]))",
+          "legendFormat": "{{service}} error"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
         },
         "overrides": []
       },
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto" }
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "PB2 — ruch przychodzący na serwer (req/s) per serwis",
+      "description": "Napływ żądań do serwerów per `service`: `sum by (service) (rate(compare_api_requests_total))`.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service) (rate(compare_api_requests_total[$__rate_interval]))",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
     },
     {
       "id": 4,
       "type": "timeseries",
       "title": "PB3 — RAM procesu (RSS)",
       "description": "`process_resident_memory_bytes` z kolektora procesu Go.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -116,7 +178,7 @@
       "type": "timeseries",
       "title": "PB3 — CPU procesu (rdzenie)",
       "description": "`rate(process_cpu_seconds_total)` — średnie zużycie CPU w rdzeniach.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 25 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
